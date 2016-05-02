@@ -1,8 +1,4 @@
-// Prog6 assignment by Hiram Molina
-// Email: hmolin2@lsu.edu
-//
-// Comments are given for the sections that are different from the previous
-// programs.
+//  Heat shimmer demo
 
 var canvas;
 var gl;
@@ -21,7 +17,6 @@ var singleTextureShader;
 var hotAreaShader;
 
 var screen;
-var pipesModel;
 var teapotModel;
 var roomModel;
 var chairModel;
@@ -79,10 +74,10 @@ function onmousemove(ev)
   lastClientY = ev.clientY;
 }
 
-// Our shader constructor has changed a lot. Like the model constructor,
-// it tests all possible locations that a shader could have, trusting
-// that WebGL will return a value of -1 if the variable is not present.
-// This allows us to generalize the shader.setup and model.draw methods. 
+// Like the model constructor, this Shader constructor it tests all possible
+// locations that a shader could have, trusting that WebGL will return a value
+// of -1 if the variable is not present.  This allows us to generalize the
+// shader.setup and model.draw methods. 
 
 function Shader(vertexShaderId, fragmentShaderId, modelVar, circumVar)
 {
@@ -118,9 +113,6 @@ function Shader(vertexShaderId, fragmentShaderId, modelVar, circumVar)
   this.bgColorTexLocation      = gl.getUniformLocation(this.program, 'bgColorTex');
 }
 
-// This function has changed a lot to accommodate more general shaders. It still tests
-// every possible variable, but I've encapsulated the tests (for -1) into their own
-// functions, different ones for different uniform types.
 Shader.prototype.setup = function (projectionMatrix, viewMatrix, modelMatrix, normalMatrix, lightPosition)
 {
   gl.useProgram(this.program);
@@ -318,8 +310,8 @@ function initTexture(texture, imageSource)
 
 function setCommonTexParameters()
 {
-	// This function has changed! I've set the wrap mode to repeat so
-	// that the displacement texture works correctly.
+  // This function has changed! I've set The wrap mode is set to repeat
+  // so that the displacement texture works correctly.
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -353,9 +345,6 @@ function init()
   canvas.onmouseup   = onmouseup;
   canvas.onmousemove = onmousemove;
 
-  // Next, we need the source code for the shaders, which are stored as scripts
-  // in the html file. We then create a program, which means compiling,
-  // linking, and loading the shaders.
 	// Shader creation and initialization.
   singleTextureShader = new Shader('singleTextureVertexShader', 'singleTextureFragmentShader');
   textureShader  = new Shader('textureVertexShader', 'textureFragmentShader');
@@ -369,11 +358,6 @@ function init()
     specular : 'room_SPEC.jpg',
     normal   : 'room_NRM.jpg'
   };
-  var pipesImages = {
-    diffuse  : 'striated_COLOR.jpg',
-    specular : 'striated_SPEC.jpg',
-    normal   : 'striated_NRM.jpg'
-  };
   var teapotImages = {
     diffuse  : 'metal1_notile_COLOR.jpg',
     specular : 'metal1_notile_SPEC.jpg',
@@ -386,7 +370,6 @@ function init()
   };
   screen      = new Model(square);
   roomModel   = new Model(simpleRoom, roomImages);
-  pipesModel  = new Model(pipes, pipesImages);
   teapotModel = new Model(teapot, teapotImages);
   chairModel  = new Model(chair, chairImages);
 
@@ -422,27 +405,8 @@ function init()
 
 function draw()
 {
-	// Model selection
-  var drawWhich;
-  var modelRadio = document.getElementsByName('modelRadio');
-  var i;
-  for(i = 0; i < modelRadio.length; i++)
-  {
-    if(modelRadio[i].checked)
-      drawWhich = modelRadio[i].value;
-  }
-	switch(drawWhich)
-	{
-		case 'drawTeapot':
-		 	currModel = teapotModel;
-      break;
-		case 'drawPipes':
-		 	currModel = pipesModel;
-      break;
-		default :
-			currModel = teapotModel;
-	}
 
+  currModel = teapotModel;
 	// Shader selection
   if(document.getElementById("heatToggle").checked)
 	  currentShader = heatShader;
@@ -483,8 +447,8 @@ function draw()
 	// a post-process effect, so we need to encapsulate that here.
   var useHeatShader = function ()
   {
-		// First we draw the model to a hot area frame buffer, making it so
-		// that we can see where in space the object casts heat.
+	// First we draw the model to a hot area frame buffer, making it so
+	// that we can see where in space the object casts heat.
     gl.bindFramebuffer(gl.FRAMEBUFFER, hotAreaFrameB);
     gl.viewport(0, 0, 512, 512); 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

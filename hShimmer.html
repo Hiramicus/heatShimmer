@@ -1,18 +1,14 @@
-<!--
-  Final project by Hiram Molina
-  Email: hmolin2@lsu.edu
-  -->
-
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="author" content="Hiram Molina"/>
     <meta charset="utf-8" />
     
     <script type="text/javascript" src="webgl-utils.js"></script>
     <script type="text/javascript" src="webgl-debug.js"></script>
     <script type="text/javascript" src="cuon-utils.js"></script>
     <script type="text/javascript" src="cuon-matrix.js"></script>
-    <script type="text/javascript" src="prog7.js"></script>
+    <script type="text/javascript" src="hShimmer.js"></script>
     <script type="text/javascript" src="square.js"></script>
     <script type="text/javascript" src="simpleRoom.js"></script>
     <script type="text/javascript" src="pipes.js"></script>
@@ -21,15 +17,15 @@
 
     <title>Caution, the tea might be hot.</title>
   </head>
-	<h1>Final project by Hiram Molina</h1>
+	<h1>Heat shimmer simulation</h1>
 	<h2>Definition of goal</h2>
 	<p>Our goal is to make an object appear as if it were so hot that it
-	made the air around it shimmer. More precisely, this means distort
-	the portion of the image where the object or the space around it is
-	visible so that it appears the light is bending in that region. This
-	bending can't be uniform and it can't be completely random: it shrinks
-	and expands the image in globs, but their distribution across space
-	and change across time appear to be random.</p>
+	made the air around it shimmer. More precisely, this means distort the
+	portion of the image where the object or the space around it is visible
+	so that it appears the light is bending in that region. This bending
+	can't be uniform and it can't be completely random: it shrinks and
+	expands the image in globs, but their distribution across space and
+	change across time appear to be random.</p>
 	<h2>Plan of attack</h2>
 	<h3>Overall strategy</h3>
 	<p>Our overall strategy is to use frame buffer objects to create a
@@ -38,28 +34,31 @@
 	portions that match up with the texture.</p>
 	<h3>Implementation</h3>
 	<p>The object that is meant to be distorted is first rendered to an
-	offscreen buffer, but it gets rendered differently: any vertices whose
-	normal points up are shifted (translated) upwards by a small amount.
-	This permits applying effects to an area besides where the object normally
-	resides. In addition to that, it renders it completely red.</p>
-	<p>The next stage is to apply the heat effect distortion. It does this
-	using a water surface as a displacement map, varying it over time, and
-  applying this distortion only in locations where the hot area shader
-	colored red and no object lies in the foreground.</p>
-  <h2>Future goals</h2>
-	<p>There are several things that need to change here, some that I can
-	implement with a little more time, and some that I need to think about
-	more carefully. The most important effect is to make the distortion fade away
-	gracefully, in two different ways: there should be no outline between the
-	space distorted and the space that is not, and the overall shape of
-	the distorted area needs to become simpler as the distance increases
-	(a teapot should fade into a sphere, etc.). I tried to get this information
-	across through the colors, but it seemed I needed to pass information
-	to the shader concerning the overall geometry of the model in order to
-	modulate this color correctly.</p>
+	offscreen buffer, but it gets rendered differently: any vertex whose
+	normal points up is shifted (translated) upwards by a small amount.
+	This permits applying effects to an area besides where the object
+	normally resides. In addition to that, it renders it completely
+	red.</p>
+       	<p>The next stage is to apply the heat effect distortion. It
+	does this using a water surface as a displacement map, varying it over
+	time, and applying this distortion only in locations where the hot area
+	shader colored red and no object lies in the foreground.</p>
+	<h2>Future goals</h2>
+	<p>There are several things that need to change here.  The most
+	important effect is to make the distortion fade away gracefully, in two
+	different ways: there should be no outline between the space distorted
+	and the space that is not, and the overall shape of the distorted area
+	needs to become simpler as the distance increases (a teapot should fade
+	into a sphere, etc.). I've tried to get this information across through
+	the colors, but it seems that I need to pass information to the shader
+	concerning the overall geometry of the model in order to modulate this
+	color correctly.</p>
+	<h3>Notes</h3>
+	<p>This demo works best in Firefox.</p>
 
   <body onload="init()">
     <script id="singleTextureVertexShader" type="x-shader/x-vertex"> 
+      // A shader to allow us to draw something that needs only one texture.
       precision mediump float;
 
       uniform mat4 projectionMatrix;
@@ -117,7 +116,10 @@
         gl_FragColor = vec4(fragmentColor, 1.0);
       }
     </script>
+    
     <script id="textureVertexShader" type="x-shader/x-vertex"> 
+      // A shader that allows us to draw a model with three textures: color,
+      // specular, and normal.
       precision mediump float;
 
       uniform mat4 projectionMatrix;
@@ -184,6 +186,7 @@
       }
     </script>
     <script id="plainVertexShader" type="x-shader/x-vertex"> 
+      // This is a do-nothing post-process effect shader.
       precision mediump float;
 
       attribute vec4 vertexPosition;
@@ -336,12 +339,7 @@
     <input type="range" id="zSlider" min="-5" max="5" step="0.05" value="3.0"></input>
     <br>
     <p>Heat distortion toggle:
-		<input type="checkbox" id="heatToggle">
-		</p>
-    <p>Model selection:</p>
-    <input type="radio" name="modelRadio" value="drawTeapot" checked>Teapot
-    <br>
-    <input type="radio" name="modelRadio" value="drawPipes">Pipes
-    <br>
+    <input type="checkbox" id="heatToggle">
+    </p>
   </body>
 </html>
