@@ -54,6 +54,7 @@
 	color correctly.</p>
 	<h3>Notes</h3>
 	<p>This demo works best in Firefox.</p>
+	<p>Click and drag on the screen to rotate the model.</p>
 
   <body onload="init()">
     <script id="singleTextureVertexShader" type="x-shader/x-vertex"> 
@@ -236,16 +237,21 @@
         normalize(modelNormal);
         fragmentNormal = modelNormal;
 
+        // This is where things get interesting. This is a matrix that shifts
+        // any vertices a little bit towards their normals. Simply, it makes any
+        // models fatter.
         mat4 shiftOut = mat4(1.0, 0.0, 0.0, 0.0,
                              0.0, 1.0, 0.0, 0.0,
                              0.0, 0.0, 1.0, 0.0,
                              0.2*modelNormal.x, 0.2*modelNormal.y, 0.2*modelNormal.z, 1.0);
 
+        // Similarly this shifts each vertex a little bit up.
         mat4 shiftUp  = mat4(1.0, 0.0, 0.0, 0.0,
                              0.0, 1.0, 0.0, 0.0,
                              0.0, 0.0, 1.0, 0.0,
                              0.0, 0.1, 0.0, 1.0);
-
+        // Note that we apply these transformations after the modelMatrix
+        // because we want 'up' to be relative to the world, not the object.
         gl_Position = projectionMatrix*viewMatrix*shiftUp*shiftOut*modelMatrix*vertexPosition;
         fragmentColor = vec4(1.0, 0.0, 0.0, 1.0);
       }
@@ -302,6 +308,7 @@
  
       void main()
       {
+        // This is the distance between our texels.
         float d = 1.0 / 512.0;
         vec4 currentTexel = texture2D(colorTexture, fragmentTexCoord);
         vec4 sceneDepth = texture2D(depthTexture, fragmentTexCoord);
@@ -309,16 +316,21 @@
 
         if(texture2D(hotAreaColorTex, fragmentTexCoord).r > 0.0 && currentTexel.a != 0.0)
         {
+          // Here, we calculate how much to displace by using a water-surface
+          // texture's normals, only the x and y, though.
           vec2 displacement = texture2D(displaceTexture, vec2(fragmentTexCoord.x, fragmentTexCoord.y + d*shift)).rg;
+          // It's easy to overdo it with displacement.
           displacement = vec2(displacement.r*0.015, displacement.g*0.015);
           gl_FragColor = texture2D(bgColorTex, fragmentTexCoord + displacement);
         }
-        else
+        else 
         {
+          // We leave things the same if the area was never hot.
           gl_FragColor = texture2D(colorTexture, fragmentTexCoord);
         }
         if(sceneDepth.r < hotAreaDepth.r)
         {
+          // We leave things the same if there's an object blocking the view.
           gl_FragColor = texture2D(colorTexture, fragmentTexCoord);
         }
       }

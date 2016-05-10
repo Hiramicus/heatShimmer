@@ -3,23 +3,43 @@
 var canvas;
 var gl;
 
-var modelRotationX = 0;
-var modelRotationY = 0;
-var dragging = false;
-var lastClientX;
-var lastClientY;
+// Here are a few variables to determine how to rotate the model based on how
+// the user drags the mouse on the canvas.
+var modelRotationX = 0; // How much to rotate around the x-axis.
+var modelRotationY = 0; // How much to rotate around the y-axis.
+var dragging = false;   // Records whether the mouse is dragging.
+var lastClientX;        // Records the last x position of the mouse.
+var lastClientY;        // Records the last y position of the mouse. 
 
+// These are the various shaders we use for our demo.
+// 
+// The plainShader is a do-nothing postprocess effect. It simply renders the
+// offscreen buffer onto a square (which serves as our screen).
+// 
+// The texture shader is our main drawing shader. It's equipped to draw objects
+// that include three textures, a diffuse color texture, a specular texture, and
+// a normal texture. The single texture shader is there to draw simple objects
+// that don't need all of these.
+//
+// The hotAreaShader is used to draw a silhouette of the hot object that is
+// bigger than the one drawn normally. It's there to cover the area that needs
+// to be distored.
+//
+// The heatShader actually applies the heat shimmering postprocess effect to the
+// scene, determining which pixels actually need to be distorted.
 var plainShader;
 var textureShader;
-var heatShader;
-
 var singleTextureShader;
 var hotAreaShader;
+var heatShader;
 
-var screen;
-var teapotModel;
-var roomModel;
-var chairModel;
+// These are the models used to showcase the effect.
+var screen;      // This is the only model that is drawn on screen. The scene
+                 // is drawn offscreen, postprocess effects are applied, and
+		 // then the resulting texture is applied to this model.
+var teapotModel; // This is the model that will shimmer.
+var roomModel;   // This serves as a background.
+var chairModel;  // This is an obstacle between the viewer and the teapot.
 
 var colorTexture;
 var depthTexture;
@@ -32,12 +52,15 @@ var bgFrameB;
 var up = 0; // This makes the distorion animate upwards.
 
 // This function lets us get a single array out of an array of arrays. The GPU
-// actually works on only flat arrays.
+// actually works on only flat arrays, so this function constructs that out of
+// the model data.
 function flatten(a)
 {
   return a.reduce(function (b, v) { b.push.apply(b, v); return b }, [])
 }
 
+// User interactivity function. It records that the mouse button was pressed,
+// then makes a note of the coordinates.
 function onmousedown(ev)
 {
   dragging = true;
@@ -45,21 +68,33 @@ function onmousedown(ev)
   lastClientY = ev.clientY;
 }
 
+// This triggers when the user lets go of the mouse button and allows us to stop
+// rotating the object.
 function onmouseup(ev)
 {
   dragging = false; 
 }
 
+// This is called whenever the mouse moves. Its goal is to calculate how much
+// the model should rotate by.
 function onmousemove(ev)
 {
   if(dragging)
   {
-    dX = ev.clientX - lastClientX;
-    dY = ev.clientY - lastClientY;
+    // Delta x and y. They record how much the mouse was moved.
+    var dX = ev.clientX - lastClientX;
+    var dY = ev.clientY - lastClientY;
 
+    // The modelRotation variables record absolute rotation, not just change,
+    // yet we only calculated change above. This is why we need to keep the old
+    // value.
     modelRotationY = modelRotationY + dX;
     modelRotationX = modelRotationX + dY;
 
+    // Rotating the object completely upside down reverses the left and right
+    // directions, confusing the relationship between dragging and rotation. We
+    // avoid this by simply not allowing the object to freely spin around the
+    // x-axis.
     if(modelRotationX > 90.0)
     {
       modelRotationX = 90.0;
@@ -68,13 +103,15 @@ function onmousemove(ev)
     {
       modelRotationX = -90.0;
     }
-    draw();
+    draw(); // Updating image.
   }
+  // Recording the current position so that we can compute the change in
+  // position later.
   lastClientX = ev.clientX;
   lastClientY = ev.clientY;
 }
 
-// Like the model constructor, this Shader constructor it tests all possible
+// Like the model constructor, this Shader constructor tests all possible
 // locations that a shader could have, trusting that WebGL will return a value
 // of -1 if the variable is not present.  This allows us to generalize the
 // shader.setup and model.draw methods. 
